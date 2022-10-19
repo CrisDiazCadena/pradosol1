@@ -13,14 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        //
-        Schema::create('addresses', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('country'); 
-            $table->string('state');
-            $table->string('city');
-            $table->string('street');
-            $table->string('complement')->nullable(); //If have more information for the specific address
+        Schema::create('modifications', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('type');
+            $table->Integer('user_id')->unsigned(); //foreing key
+            $table->foreign('user_id')->references('id')->on('users')->onDelete("cascade"); //Reference to users table
             $table->timestamps();
         });
     }
@@ -32,7 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        //
-        Schema::dropIfExists('addresses');
+        Schema::dropIfExists('modifications');
     }
 };
