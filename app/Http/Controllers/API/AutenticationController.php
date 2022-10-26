@@ -56,7 +56,7 @@ class AutenticationController extends Controller
         'res' => true,
         'msg' => 'Acceso concedido',
         'token' => $token,
-        'user' => $user->type
+        'user' => $user
     ],200);
 
     }

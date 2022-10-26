@@ -29,8 +29,8 @@ Route::post('login',[AutenticationController::class, 'login']);
 Route::group(['middleware' => ['auth:sanctum']], function(){
     //Route::post('logout',[AutenticationController::class, 'logout'])->middleware('employerole');
     Route::post('logout',[AutenticationController::class, 'logout']);
-    Route::get('admin/users', [AdminController::class, 'index'])->middleware('adminrole');
-    Route::get('admin/users/{id}', [AdminController::class, 'show'])->middleware('adminrole');
+    Route::get('admin/users', [AdminController::class, 'index']);
+    Route::get('admin/users/{id}', [AdminController::class, 'show']);
     Route::put('admin/users/updateinfo/{user}', [AdminController::class, 'update'])->middleware('adminrole');
     Route::delete('admin/users/deleteuser/{user}', [AdminController::class, 'destroy'])->middleware('adminrole');
 });
