@@ -13,11 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('modifications', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+        Schema::create('administrators', function (Blueprint $table) {
+            $table->increments('id');
             $table->string('type');
-            $table->Integer('user_id')->unsigned(); //foreing key
+            $table->Integer('user_id')->unsigned();
             $table->foreign('user_id')->references('id')->on('users')->onDelete("cascade"); //Reference to users table
             $table->timestamps();
         });
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('modifications');
+        Schema::dropIfExists('administrators');
     }
 };

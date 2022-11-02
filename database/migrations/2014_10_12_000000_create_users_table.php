@@ -18,7 +18,6 @@ return new class extends Migration
             //$table->engine="InnoDB"; //Specify the table storage engine
             $table->increments('id');
             $table->string('image')->default('https://cdn-icons-png.flaticon.com/512/74/74472.png'); // Avatar
-            $table->enum('type', ['client', 'employee', 'admin'])->nullable(false)->default('client'); //user (administrator, normal user, particular)
             $table->enum('type_identification',['cc', 'ti', 'passport']); //DNI Type (Identity document)
             $table->string('identification_card')->unique(); //DNI (Identity document)
             $table->string('password'); //Encrypted password bcrypt()
