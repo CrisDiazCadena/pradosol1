@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use App\Models\User;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -15,13 +16,22 @@ class UserFactory extends Factory
      *
      * @return array<string, mixed>
      */
+
+    protected $model = User::class;
+
     public function definition()
     {
         return [
+            'type_identification' => fake()->randomElement(['cc', 'ti', 'pap', 'nip', 'nit', 'ce']),
+            'identification_card' => fake()->unique()->numberBetween(100000,100000000),
+            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
             'name' => fake()->name(),
+            'lastname' => fake()->lastName(),
+            'status' => fake()->randomElement(['active', 'inactive']),
+            'address' => fake()->paragraph(),
             'email' => fake()->unique()->safeEmail(),
+            'phone' => fake()->unique()->phoneNumber(),
             'email_verified_at' => now(),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'remember_token' => Str::random(10),
         ];
     }
