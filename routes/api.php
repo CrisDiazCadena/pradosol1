@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AutenticationController;
 use App\Http\Controllers\API\AdminController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\Api\LoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,7 +24,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::post('register',[AutenticationController::class, 'register']);
-Route::post('login',[AutenticationController::class, 'login']);
+Route::withoutMiddleware(ValidateJsonApiDocument::class)
+    ->post('api/v1/login',LoginController::class)
+    ->name('api.v1.login');
 
 
 
