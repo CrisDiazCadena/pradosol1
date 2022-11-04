@@ -18,10 +18,10 @@ return new class extends Migration
             $table->string('name'); //event name
             $table->string('eventtype'); //event
             $table->date('startdate'); //event´s start date
-            $table->enum('state', ['waiting', 'approved', 'unapproved'])->nullable(false)->default('waiting');
             $table->date('enddate'); //event´s end date
-            $table->integer('socio_id')->unsigned();
-            $table->foreign('socio_id')->references('id')->on('partners')->onDelete("restrict"); //Reference to users table
+            $table->enum('state', ['waiting', 'approved', 'unapproved'])->nullable(false)->default('waiting');
+            $table->integer('socio_id')->unsigned()->nullable();
+            $table->foreign('socio_id')->references('id')->on('partners')->onDelete("restrict")->nullable(); //Reference to partners table
             $table->integer('admin_id')->unsigned();
             $table->foreign('admin_id')->references('id')->on('administrators')->onDelete("restrict")->default('1'); //Reference to Administrators table
             $table->timestamps();//create timer, modified timer

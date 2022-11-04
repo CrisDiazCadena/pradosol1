@@ -15,9 +15,10 @@ return new class extends Migration
     {
         Schema::create('partners', function (Blueprint $table) {
             $table->increments('id');
-            $table->enum('vinculation', ['pensioner', 'administrative', 'none']); //kind of vinculation with UIS
+            $table->enum('vinculation', ['pensioner', 'worker', 'none']); //kind of vinculation with UIS
             $table->Integer('user_id')->unsigned();
             $table->foreign('user_id')->references('id')->on('users')->onDelete("cascade"); //Reference to users table
+            $table->integer('pass')->nullable(); //Number of active annual passes
             $table->timestamps();
         });
     }

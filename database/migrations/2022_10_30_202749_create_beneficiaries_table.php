@@ -20,9 +20,10 @@ return new class extends Migration
             $table->string('lastname'); //Last name
             $table->string('identification_type'); //DNI
             $table->string('identification_card'); //DNI
-            $table->timestamps(); //create timer, modified timer
             $table->Integer('socio_id')->unsigned(); //foreing key
             $table->foreign('socio_id')->references('id')->on('partners')->onDelete("cascade"); //Reference to partners table
+            $table->timestamps(); //create timer, modified timer
+            
         });
     }
 
