@@ -6,27 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserCollection;
 use App\Http\Resources\UserResource;
 use App\Models\User;
-use App\Models\Administrator;
 use Illuminate\Http\Request;
-use App\Http\Requests\UpdateUserRequest;
-use App\Models\Employee;
-use App\Models\Partner;
 
 class UserController extends Controller
 {
-
-    public function __construct()
-    {
-        $this->middleware('adminrole'); 
-    }
-
     public function show(User $user){
         return UserResource::make($user);
     }
 
     public function index(): UserCollection
     {
-        return UserCollection::make(User::paginate());
+        return UserCollection::make(User::all());
     }
 
     public function create(Request $request)
@@ -43,34 +33,6 @@ class UserController extends Controller
             'phone' => $request->input('data.users.phone')
         ]);
         return response()->json($user,201);
-    }
-
-    public function update(UpdateUserRequest $request, User $user)
-    {
-
-        $user->update($request->validated());
-        return response()->json([
-            'res' => true,
-            'msg' => 'usuario actualizado',
-            'user' =>$user
-        ], 200);
-    }
-
-    public function filter(Request $request): UserCollection
-    {
-        if($request == 'administrator'){
-            return UserCollection::make(User::where(Administrator::select('user_id'), 'id'));
-        }
-        else{
-            if($request == 'partner'){
-                return UserCollection::make(User::where(Partner::select('user_id'), 'id'));
-            }
-            else{
-                if($request == 'employee'){
-                    return UserCollection::make(User::where(Employee::select('user_id'), 'id'));
-                }
-            }
-        }
     }
 }
 

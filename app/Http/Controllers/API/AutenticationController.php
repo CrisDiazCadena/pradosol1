@@ -43,6 +43,7 @@ class AutenticationController extends Controller
         'msg' => ['Las credenciales proveidas no son correctas!.'],
         ]);
     }
+    //Change request to the foreing key of the user type
 
     if ($request->type != $user->type){
         throw ValidationException::withMessages([

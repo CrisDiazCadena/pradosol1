@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AutenticationController;
 use App\Http\Controllers\API\AdminController;
+use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\Api\LoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,7 +24,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::post('register',[AutenticationController::class, 'register']);
-Route::post('login',[AutenticationController::class, 'login']);
+Route::withoutMiddleware(ValidateJsonApiDocument::class)
+    ->post('api/v1/login',LoginController::class)
+    ->name('api.v1.login');
 
 
 
@@ -34,6 +38,10 @@ Route::group(['middleware' => ['auth:sanctum']], function(){
     Route::put('admin/users/updateinfo/{user}', [AdminController::class, 'update'])->middleware('adminrole');
     Route::delete('admin/users/deleteuser/{user}', [AdminController::class, 'destroy'])->middleware('adminrole');
 });
+
+Route::get('users', [UserController::class, 'index'])->name('api.v1.users.index');
+Route::get('users/{user}', [UserController::class, 'show'])->name('api.v1.users.show');
+Route::post('users', [UserController::class, 'create'])->name('api.v1.users.create');
 
 
 
