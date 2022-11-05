@@ -15,7 +15,6 @@ class LoginController extends Controller
         $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
-            'device_name' => ['required'],
         ]);
 
         $user = User::whereEmail($request->email)->first();
@@ -29,7 +28,17 @@ class LoginController extends Controller
         $plainTextToken = $user->createToken($request->device_name)->plainTextToken;
 
         return response()->json([
-           'plain-text-token' => $plainTextToken
+            'user' => $user,
+            'plain-text-token' => $plainTextToken
         ]);
+    }
+
+    public function logout(Request $request){
+        $request -> user()-> currentAccessToken()->delete();
+        return response()->json([
+            'res' => true,
+            'msg' => 'LogOut satisfactorio',
+
+        ],200);
     }
 }
