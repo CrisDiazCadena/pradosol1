@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Symfony\Contracts\Service\Attribute\Required;
 
 class RegisterRequest extends FormRequest
 {
@@ -25,13 +26,14 @@ class RegisterRequest extends FormRequest
     {
         return [
             //
-            'name' => 'required',
-            'lastname' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required',
             'type_identification' => 'required',
             'identification_card' => 'required|unique:users,type_identification',
-            'address' => 'required'
+            'password' => 'required',
+            'name' => 'required',
+            'lastname' => 'required',
+            'address' => 'required',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'required',
         ];
     }
 }

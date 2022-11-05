@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Administrator;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UserAccessTypeAdmin
@@ -20,7 +22,14 @@ class UserAccessTypeAdmin
     public function handle(Request $request, Closure $next)
     {
 
-        $user = DB::table('users')->select('type')->where('email',$request->current_user)->first();
+        if(Auth::check() && Auth::user()->id==Administrator::select('user_id')){
+            return $next($request);
+        }
+        else{
+            return redirect('/');
+        }
+
+    /*    $user = DB::table('users')->select('type')->where('email',$request->current_user)->first();
         if ($user && $user->type === 'admin')
         {
             return $next($request);
@@ -32,6 +41,6 @@ class UserAccessTypeAdmin
         //return $next($request);
         //return redirect("/");
 
-
+        */
     }
 }

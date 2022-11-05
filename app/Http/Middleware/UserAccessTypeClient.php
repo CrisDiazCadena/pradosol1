@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Partner;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UserAccessTypeClient
@@ -19,6 +21,13 @@ class UserAccessTypeClient
      */
     public function handle(Request $request, Closure $next)
     {
+        if(Auth::check() && Auth::user()->id==Partner::select('user_id')){
+            return $next($request);
+        }
+        else{
+            return redirect('/');
+        }
+        /*
         $user = DB::table('users')->select('type')->where('email',$request->email)->first();
         if ($user && $user->type === 'client')
         {
@@ -28,6 +37,7 @@ class UserAccessTypeClient
             'res' => false,
             'msg' =>"No tiene provilegios para acceder client"
         ]);
+        */
     }
 
 }
