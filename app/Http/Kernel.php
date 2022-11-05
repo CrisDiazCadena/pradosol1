@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\UserBeneficiaryType;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -42,6 +43,7 @@ class Kernel extends HttpKernel
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\ValidateJsonApiHeaders::class,
         ],
     ];
 
@@ -66,5 +68,6 @@ class Kernel extends HttpKernel
         'adminrole' => \App\Http\Middleware\UserAccessTypeAdmin::class,
         'employerole' => \App\Http\Middleware\UserAccessTypeEmployee::class,
         'clientrole' => \App\Http\Middleware\UserAccessTypeClient::class,
+        'sociorole' => \App\Http\Middleware\UserBeneficiaryType::class,
     ];
 }

@@ -51,7 +51,7 @@ class UserController extends Controller
         $user->update($request->validated());
         return response()->json([
             'res' => true,
-            'msg' => 'paciente actualizado',
+            'msg' => 'usuario actualizado',
             'user' =>$user
         ], 200);
     }
