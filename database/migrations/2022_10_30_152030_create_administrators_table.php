@@ -15,8 +15,7 @@ return new class extends Migration
     {
         Schema::create('administrators', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('type');
-            $table->Integer('user_id')->unsigned();
+            $table->integer('user_id')->unsigned()->nullable(); // Puede ser nula
             $table->foreign('user_id')->references('id')->on('users')->onDelete("cascade"); //Reference to users table
             $table->timestamps();
         });

@@ -2,73 +2,112 @@
 
 namespace App\Http\Controllers\API;
 
-
+use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
+use App\Models\Partner;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
-class AutenticationController extends Controller
+class AutenticationController extends ApiController
 {
     //
-    public function register(RegisterRequest $request){
-        $user = new User();
-        $user->name = $request->name;
-        $user->lastname = $request->lastname;
-        $user->email = $request->email;
-        $user->password = bcrypt($request->password);
-        $user->type_identification = $request->type_identification;
-        $user->identification_card = $request->identification_card;
-        $user->address = $request->address;
-        $user->save();
+    public function register(RegisterRequest $request)
+    {
 
-        return response()->json([
-            'res' => true,
-            'msg' => 'Usuario registrado correctamente'
-        ],200);
+        //DB::beginTransaction(); // Inicia una transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
 
+        try {
+            $user = new User();
+            $user->name = $request->name;
+            $user->lastname = $request->lastname;
+            $user->password = bcrypt($request->password);
+            $user->email = $request->email;
+            $user->address = $request->address;
+            $user->phone = $request->phone;
+            $user->type_identification_id = $request->type_identification_id;
+            $user->identification_card = $request->identification_card;
+            $user->verification_token = User::createVerificationToken();
+            $user->save();
 
+            $user->roles()->attach(3);
 
+            $partner = $user->partner()->create([
+                'bonding' => Partner::NO_BONDING,
+                'pass' => 0,
+                'children' => 0,
+                'marital_status' => Partner::SINGLE_STATUS,
+            ]);
+
+            //DB::commit(); // Confirma la transacción si todo está bien - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+            return $this->successResponse($user, 201, 'Usuario Registrado Satisfactoriamente');
+        } catch (QueryException $e) {
+            $errorCode = $e->errorInfo[1];
+
+            if ($errorCode == 1062) { // 1062 es el código de error para una violación de clave única
+                // Detectar si es una violación de clave única para el correo o el documento
+                if (str_contains($e->getMessage(), 'users.email_unique')) {
+                    $errorMessage = 'El correo electrónico ya está registrado.';
+                } elseif (str_contains($e->getMessage(), 'users.users_identification_card_unique')) {
+                    $errorMessage = 'El documento de identificación ya está registrado.';
+                } else {
+                    $errorMessage = 'Error de duplicación: ' . $e->getMessage();
+                }
+
+                return $this->errorResponse(400, $errorMessage);
+            }
+        } catch (ModelNotFoundException $e) {
+            $errorMessage = "Contenido no encontrado";
+            return $this->errorResponse(404, $errorMessage);
+        } catch (\Exception $e) {
+            $errorMessage = 'Error al registrar el usuario' . $e->getMessage();
+            return $this->errorResponse(400, $errorMessage);
+            //DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+        } catch (ValidationException $e) {
+            $errors = $e->validator->errors()->toArray();
+            $emailErrorMessage = isset($errors['email']) ? $errors['email'][1] : 'El correo electrónico ya se ha registrado';
+            return $this->errorResponse(404, $emailErrorMessage);
+        }
     }
 
     public function login(LoginRequest $request)
     {
-        $user = User::where('email', $request->email)->first();
+        try {
+            $user = User::where('email', $request->email)->with('roles', 'typeIdentification', 'validationStatusUser')->first();
 
-    if (! $user || ! Hash::check($request->password, $user->password)){
-        throw ValidationException::withMessages([
-        'msg' => ['Las credenciales proveidas no son correctas!.'],
-        ]);
-    }
-    //Change request to the foreing key of the user type
+            if (!$user) {
+                $errorMessage = "El correo electrónico no está registrado";
+                return $this->errorResponse(401, $errorMessage);
+            }
 
-    if ($request->type != $user->type){
-        throw ValidationException::withMessages([
-        'msg' => ['Las credenciales proveidas no son correctas!.'],
-        ]);
-    }
+            if (!$user || !Hash::check($request->password, $user->password)) {
 
-    $token = $user->createToken($request->email)->plainTextToken;
-
-    return response()->json([
-        'res' => true,
-        'msg' => 'Acceso concedido',
-        'token' => $token,
-        'user' => $user
-    ],200);
-
+                $errorMessage = "La contraseña es incorrecta";
+                return $this->errorResponse(401, $errorMessage);
+            }
+            $token = $user->createToken($request->email)->plainTextToken;
+            $successMessage = "Acceso concedido";
+            return $this->loginResponse($user, 200, $successMessage, $token);
+        } catch (\Exception $e) {
+            $errorMessage = 'Error al iniciar sesión' . $e->getMessage();
+            return $this->errorResponse(500, $errorMessage);
+            //DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+        }
     }
 
-    public function logout(Request $request){
-        $request -> user()-> currentAccessToken()->delete();
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
         return response()->json([
             'res' => true,
             'msg' => 'LogOut satisfactorio',
 
-        ],200);
+        ], 200);
     }
-
 }

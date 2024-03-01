@@ -14,8 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('registers', function (Blueprint $table) {
-            $table->id();
-            $table->Integer('socio_id');
+            $table->increments('id');
             $table->Integer('user_id')->unsigned();
             $table->foreign('user_id')->references('id')->on('users')->onDelete("restrict"); //Reference to Administrators table
             $table->Integer('activity_id')->unsigned();

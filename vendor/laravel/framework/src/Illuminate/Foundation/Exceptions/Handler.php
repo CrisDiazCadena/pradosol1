@@ -2,6 +2,7 @@
 
 namespace Illuminate\Foundation\Exceptions;
 
+use App\Traits\ApiResponser;
 use Closure;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -45,7 +46,7 @@ use Throwable;
 
 class Handler implements ExceptionHandlerContract
 {
-    use ReflectsClosures;
+    use ReflectsClosures, ApiResponser;
 
     /**
      * The container implementation.
@@ -458,9 +459,8 @@ class Handler implements ExceptionHandlerContract
      */
     protected function unauthenticated($request, AuthenticationException $exception)
     {
-        return $this->shouldReturnJson($request, $exception)
-                    ? response()->json(['message' => $exception->getMessage()], 401)
-                    : redirect()->guest($exception->redirectTo() ?? route('login'));
+        $message = "Token no válido o no proporcionado";
+        return $this->errorResponse(401, $message);
     }
 
     /**

@@ -6,11 +6,20 @@
     'aliases' => 
     array (
     ),
-    'reference' => '642dc70db8c2f232f8d902ef6f08ae6da3292c26',
+    'reference' => 'e6b31e00cf22c3be16c13ddddf05331eebb35f66',
     'name' => 'laravel/laravel',
   ),
   'versions' => 
   array (
+    'barryvdh/laravel-cors' => 
+    array (
+      'pretty_version' => 'v3.0.0',
+      'version' => '3.0.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '7c036ec08972d8d5d9db637e772af6887828faf5',
+    ),
     'brick/math' => 
     array (
       'pretty_version' => '0.10.2',
@@ -407,7 +416,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '642dc70db8c2f232f8d902ef6f08ae6da3292c26',
+      'reference' => 'e6b31e00cf22c3be16c13ddddf05331eebb35f66',
     ),
     'laravel/pint' => 
     array (

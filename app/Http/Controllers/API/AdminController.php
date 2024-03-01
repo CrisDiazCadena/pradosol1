@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Requests\UpdateUserRequest;
 
-class AdminController extends Controller
+class AdminController extends ApiController
 {
     /**
      * Display a listing of the resource.

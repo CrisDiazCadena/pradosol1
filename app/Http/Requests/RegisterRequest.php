@@ -26,14 +26,14 @@ class RegisterRequest extends FormRequest
     {
         return [
             //
-            'type_identification' => 'required',
-            'identification_card' => 'required|unique:users,type_identification',
-            'password' => 'required',
+            'identification_card' => 'required|unique:users,type_identification_id',
             'name' => 'required',
             'lastname' => 'required',
+            'password' => 'required|min:8',
             'address' => 'required',
             'email' => 'required|email|unique:users,email',
             'phone' => 'required',
+            'type_identification_id' => 'required',
         ];
     }
 }
