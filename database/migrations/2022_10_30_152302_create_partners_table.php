@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Partner;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,10 +16,15 @@ return new class extends Migration
     {
         Schema::create('partners', function (Blueprint $table) {
             $table->increments('id');
-            $table->enum('vinculation', ['pensioner', 'worker', 'none']); //kind of vinculation with UIS
-            $table->Integer('user_id')->unsigned();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete("cascade"); //Reference to users table
-            $table->integer('pass')->nullable(); //Number of active annual passes
+            $table->string('bonding')->default(Partner::NO_BONDING); //kind of bonding with UIS
+            $table->integer('pass')->default(0); //Number of active annual passes
+            $table->unsignedTinyInteger('children')->default(0);
+            $table->string('marital_status')->default(Partner::SINGLE_STATUS);
+            $table->integer('user_id')->unsigned()->nullable(); // Puede ser nula
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+
+
             $table->timestamps();
         });
     }

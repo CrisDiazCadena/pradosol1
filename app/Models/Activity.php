@@ -9,5 +9,16 @@ class Activity extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        "title",
+        "description",
+    ];
+
     protected $table = "activities";
+
+
+    public function registers()
+    {
+        return $this->hasOne(Register::class);
+    }
 }

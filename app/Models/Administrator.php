@@ -9,5 +9,9 @@ class Administrator extends Model
 {
     use HasFactory;
 
-    protected $table = "administrators"; 
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -14,16 +14,19 @@ return new class extends Migration
     public function up()
     {
         Schema::create('beneficiaries', function (Blueprint $table) {
-            //$table->engine="InnoDB"; //Specify the table storage engine
             $table->id();
             $table->string('name'); // name
             $table->string('lastname'); //Last name
-            $table->string('identification_type'); //DNI
+            $table->string('type_beneficiary'); //Last name
             $table->string('identification_card'); //DNI
-            $table->Integer('socio_id')->unsigned(); //foreing key
-            $table->foreign('socio_id')->references('id')->on('partners')->onDelete("cascade"); //Reference to partners table
+            $table->string('verified'); //Beneficiary verified
+            $table->Integer('partner_id')->unsigned(); //foreing key
+            $table->integer('type_identification_id')->unsigned();
+
+            $table->foreign('type_identification_id')->references('id')->on('type_identification_users')->onDelete('cascade');
+            $table->foreign('partner_id')->references('id')->on('partners')->onDelete("cascade"); //Reference to partners table
+
             $table->timestamps(); //create timer, modified timer
-            
         });
     }
 

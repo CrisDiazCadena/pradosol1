@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('activities', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('Information');
+            $table->string('title');
+            $table->string('description', 1000);
             $table->timestamps();
         });
     }

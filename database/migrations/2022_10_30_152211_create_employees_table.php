@@ -14,11 +14,15 @@ return new class extends Migration
     public function up()
     {
         Schema::create('employees', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id');
             $table->string('position');
-            $table->Integer('user_id')->unsigned();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete("cascade"); //Reference to users table
+            $table->time('time_in');
+            $table->time('time_out');
+            $table->date('start_work');
+            $table->integer('user_id')->unsigned()->nullable(); // Puede ser nula
             $table->timestamps();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
         });
     }
 
