@@ -15,6 +15,8 @@ class UserRequest extends Model
 
     const TYPE_USER = 'user';
     const TYPE_EVENT = 'event';
+    const TYPE_CANCEL = 'cancel';
+    const TYPE_BUG = 'bug';
     const TYPE_OTHER = 'other';
 
     protected $attributes = [

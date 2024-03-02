@@ -25,7 +25,7 @@ class UserRequestRequest extends FormRequest
     public function rules()
     {
         return [
-            'type' => 'required|in:' . UserRequest::TYPE_USER . ',' . UserRequest::TYPE_EVENT . ',' . UserRequest::TYPE_OTHER,
+            'type' => 'required|in:' . UserRequest::TYPE_USER . ',' . UserRequest::TYPE_EVENT . ',' . UserRequest::TYPE_OTHER . ',' . UserRequest::TYPE_CANCEL . ',' . UserRequest::TYPE_BUG,
             'title' => 'required|string|max:100',
             'description' => 'required|string|max:255',
             'user_id' => 'required|exists:users,id',

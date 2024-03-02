@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\UserRequestRequest;
 use App\Models\UserRequest;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -24,7 +25,7 @@ class UserRequestController extends ApiController
             if (!$user || !$user->administrator) {
                 return $this->errorResponse(403, 'No tienes permiso ver la informacion de solicitudes.');
             } else {
-                $requestData = UserRequest::with('user')->paginate(10);
+                $requestData = UserRequest::with('user')->paginate(3);
                 return $this->successResponse($requestData, 200, 'Datos de solicitudes extraidos correctamente');
             }
         } catch (AuthenticationException $e) {
@@ -61,7 +62,7 @@ class UserRequestController extends ApiController
         }
     }
 
-    public function createUserRequest(UserRequest $request)
+    public function createUserRequest(UserRequestRequest $request)
     {
         try {
             $user = Auth::user();
