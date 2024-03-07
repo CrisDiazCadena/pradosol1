@@ -38,11 +38,13 @@ Route::post('login',[AutenticationController::class, 'login'])->name('api.v1.log
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
+    Route::post('logout',[AutenticationController::class, 'logout'])->name('api.v1.login.delete');
     Route::put('user/{id}', [UserController::class, 'updateMyUser'])->name('api.v1.user.update.own.data');
 
     Route::get('user/request/{id}', [UserRequestController::class, 'getMyUserRequest'])->name('api.v1.user.request.get.own.data');
     Route::get('user/request', [UserRequestController::class, 'getUserRequest'])->name('api.v1.user.request.get.data');
     Route::post('user/request', [UserRequestController::class, 'createUserRequest'])->name('api.v1.user.request.create.data');
+    Route::put('user/request/{id}', [UserRequestController::class, 'updateUserRequest'])->name('api.v1.user.request.put.data');
 
     Route::get('employees/{id}', [EmployeeController::class, 'showMyOwnData'])->name('api.v1.employee.show.own.data');
     Route::get('employees/{id}', [EmployeeController::class, 'showMyOwnData'])->name('api.v1.employee.show.own.data');

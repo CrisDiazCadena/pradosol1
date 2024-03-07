@@ -53,11 +53,13 @@ class EmployeeController extends ApiController
     {
         try {
             $user = Auth::user();
-            if (!$user || !$user->employee) {
+            if (!$user) {
                 return $this->errorResponse(403, 'No tienes permiso ver la informacion de los beneficiario.');
-            } else {
+            } else if  ($user->employee || $user->administrator) {
                 $beneficiariesData = Beneficiary::where('partner_id', $id)->with('typeIdentification')->get();
                 return $this->successResponse($beneficiariesData, 200, 'Datos de beneficiarios extraidos correctamente');
+            }else{
+                return $this->errorResponse(403, 'No tienes permiso ver la informacion de los beneficiario.');
             }
         } catch (AuthenticationException $e) {
             $message = "Token no válido o no proporcionado";

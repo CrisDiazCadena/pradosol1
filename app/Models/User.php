@@ -29,7 +29,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
 
-     protected $attributes = [
+    protected $attributes = [
         'validation_status_id' => 2, // Establece el valor predeterminado aquí
     ];
 
@@ -108,10 +108,10 @@ class User extends Authenticatable
         return $this->belongsTo(ValidationStatusUser::class, 'validation_status_id');
     }
 
-        public function registers()
-        {
-            return $this->hasMany(Register::class);
-        }
+    public function registers()
+    {
+        return $this->hasMany(Register::class);
+    }
 
     public function isVerified()
     {

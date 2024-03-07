@@ -106,7 +106,7 @@ class AutenticationController extends ApiController
         $request->user()->currentAccessToken()->delete();
         return response()->json([
             'res' => true,
-            'msg' => 'LogOut satisfactorio',
+            'msg' => 'Sesion eliminada',
 
         ], 200);
     }

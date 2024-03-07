@@ -14,6 +14,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PartnerController extends ApiController
 {
@@ -55,6 +56,7 @@ class PartnerController extends ApiController
                 return $this->errorResponse(403, 'No tienes permiso para Actualizar el usuario.');
             }
 
+            DB::beginTransaction();
             $partner = Partner::findOrFail($id);
 
             if ($request->has('children') && $partner->children != $request->children) {
@@ -73,18 +75,21 @@ class PartnerController extends ApiController
             $user->validation_status_id = 2;
             $user->save();
             $partner->save();
+            DB::commit();
             $successMessage = "Los datos del socio se han actualizado satisfactoriamente";
             return $this->successResponse($partner, 202, $successMessage);
         } catch (AuthenticationException $e) {
             $message = "Token no válido o no proporcionado";
+            DB::rollBack();
             return $this->errorResponse(401, $message);
         } catch (ModelNotFoundException $e) {
             $errorMessage = "Contenido no encontrado";
+            DB::rollBack();
             return $this->errorResponse(404, $errorMessage);
         } catch (\Exception $e) {
+            DB::rollBack();
             $errorMessage = 'Error al actualizar el usuario' . $e->getMessage();
             return $this->errorResponse(400, $errorMessage);
-            //DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
         }
     }
 }

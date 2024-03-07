@@ -43,7 +43,6 @@ class UserController extends ApiController
                 $orderBy = $request->input('order_by');
                 $orderByColumn = $request->input('order_by_column');
                 $query->orderBy($orderByColumn, $orderBy);
-
             }
             if ($request->has('search') && !$request->has('search_column')) {
                 $searchTerm = $request->input('search');
@@ -61,6 +60,14 @@ class UserController extends ApiController
                 $searchColumn = $request->input('search_column');
                 $query->where($searchColumn, 'like', "%$searchTerm%");
             }
+
+            if ($request->has('filter_1')) {
+                $filter1Term = $request->input('filter_1');
+                $query->whereHas('partner', function ($query) use ($filter1Term){
+                    $query->where("partners.bonding", 'like', "%$filter1Term%");
+                });
+            }
+
 
             $partnersUsers = $query->paginate(10);
 
@@ -80,34 +87,33 @@ class UserController extends ApiController
             $query = Beneficiary::query()->with('partner.user', 'typeIdentification');
 
             // Verificar si el usuario está autenticado
-            if (!$user || !$user->employee) {
+            if ($user && ($user->employee || $user->administrator)) {
+                if ($request->has('order_by') && $request->has('order_by_column')) {
+                    $orderBy = $request->input('order_by');
+                    $orderByColumn = $request->input('order_by_column');
+                    $query->orderBy($orderByColumn, $orderBy);
+                }
+                if ($request->has('search') && !$request->has('search_column')) {
+                    $searchTerm = $request->input('search');
+                    $query->where(function ($query) use ($searchTerm) {
+                        $query->where('name', 'like', "%$searchTerm%")
+                            ->orWhere('lastname', 'like', "%$searchTerm%")
+                            ->orWhere('identification_card', 'like', "%$searchTerm%")
+                            ->orWhere('type_beneficiary', 'like', "%$searchTerm%");
+                    });
+                }
+                if ($request->has('search') && $request->has('search_column')) {
+                    $searchTerm = $request->input('search');
+                    $searchColumn = $request->input('search_column');
+                    $query->where($searchColumn, 'like', "%$searchTerm%");
+                }
+
+                $beneficiaries = $query->paginate(10);
+
+                return $this->successResponse($beneficiaries, 200, 'Datos de beneficiarios extraidos correctamente');
+            } else {
                 return $this->errorResponse(401, 'Usuario no autenticado');
             }
-
-            if ($request->has('order_by') && $request->has('order_by_column')) {
-                $orderBy = $request->input('order_by');
-                $orderByColumn = $request->input('order_by_column');
-                $query->orderBy($orderByColumn, $orderBy);
-
-            }
-            if ($request->has('search') && !$request->has('search_column')) {
-                $searchTerm = $request->input('search');
-                $query->where(function ($query) use ($searchTerm) {
-                    $query->where('name', 'like', "%$searchTerm%")
-                        ->orWhere('lastname', 'like', "%$searchTerm%")
-                        ->orWhere('identification_card', 'like', "%$searchTerm%")
-                        ->orWhere('type_beneficiary', 'like', "%$searchTerm%");
-                });
-            }
-            if ($request->has('search') && $request->has('search_column')) {
-                $searchTerm = $request->input('search');
-                $searchColumn = $request->input('search_column');
-                $query->where($searchColumn, 'like', "%$searchTerm%");
-            }
-
-            $beneficiaries = $query->paginate(10);
-
-            return $this->successResponse($beneficiaries, 200, 'Datos de beneficiarios extraidos correctamente');
         } catch (\Exception $e) {
             // Manejo de excepciones
             return $this->errorResponse(500, 'Error al obtener los usuarios: ' . $e->getMessage());
