@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\RegisterController;
@@ -45,6 +46,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('user/request', [UserRequestController::class, 'getUserRequest'])->name('api.v1.user.request.get.data');
     Route::post('user/request', [UserRequestController::class, 'createUserRequest'])->name('api.v1.user.request.create.data');
     Route::put('user/request/{id}', [UserRequestController::class, 'updateUserRequest'])->name('api.v1.user.request.put.data');
+
+    Route::get('administrator', [AdminController::class, 'getAdmin'])->name('api.v1.admin.get.all.data');
+    Route::get('administrator/user', [AdminController::class, 'getUsers'])->name('api.v1.admin.get.user.data');
+    Route::post('administrator', [AdminController::class, 'createAdmin'])->name('api.v1.admin..create.data');
+    Route::put('administrator/{id}', [AdminController::class, 'updateAdmin'])->name('api.v1.admin.put.data');
 
     Route::get('employees/{id}', [EmployeeController::class, 'showMyOwnData'])->name('api.v1.employee.show.own.data');
     Route::get('employees/{id}', [EmployeeController::class, 'showMyOwnData'])->name('api.v1.employee.show.own.data');

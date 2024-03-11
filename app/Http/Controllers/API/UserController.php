@@ -17,6 +17,7 @@ use App\Models\Partner;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends ApiController
 {
@@ -63,7 +64,7 @@ class UserController extends ApiController
 
             if ($request->has('filter_1')) {
                 $filter1Term = $request->input('filter_1');
-                $query->whereHas('partner', function ($query) use ($filter1Term){
+                $query->whereHas('partner', function ($query) use ($filter1Term) {
                     $query->where("partners.bonding", 'like', "%$filter1Term%");
                 });
             }
@@ -151,7 +152,7 @@ class UserController extends ApiController
             if ($AuthenticatedUser->id != $id) {
                 return $this->errorResponse(403, 'No tienes permiso para Actualizar el usuario.');
             }
-
+            DB::beginTransaction();
             $user = User::findOrFail($id);
 
             if ($request->has('address') && $user->address != $request->address) {
@@ -164,21 +165,28 @@ class UserController extends ApiController
 
             if (!$user->isDirty()) {
                 $errorMessage = "No se ha modificado ningun dato del usuario";
+                DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
                 return $this->errorResponse(422, $errorMessage);
             }
+
             $user->save();
+            DB::commit();
             $successMessage = "Los datos del usuario se han actualizado satisfactoriamente";
             return $this->successResponse($user, 202, $successMessage);
         } catch (AuthenticationException $e) {
             $message = "Token no válido o no proporcionado";
+            DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+
             return $this->errorResponse(401, $message);
         } catch (ModelNotFoundException $e) {
             $errorMessage = "Contenido no encontrado";
+            DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+
             return $this->errorResponse(404, $errorMessage);
         } catch (\Exception $e) {
             $errorMessage = 'Error al actualizar el usuario' . $e->getMessage();
+            DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
             return $this->errorResponse(400, $errorMessage);
-            //DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
         }
     }
 

@@ -26,10 +26,10 @@ return new class extends Migration
             $table->string('address');
             $table->string('phone')->nullable();
             $table->string('verification_token')->nullable();
-            $table->string('status')->default(User::INACTIVE_STATUS);
-            $table->string('verified')->default(User::NOT_VERIFIED_USER);
+            $table->string('status')->default(User::INACTIVE_STATUS);// Verificacion de la sociedad
+            $table->string('verified')->default(User::NOT_VERIFIED_USER);// Verificacion del Usuario
+            $table->integer('validation_status_id')->unsigned();//Validacion de los datos del socio
             $table->integer('type_identification_id')->unsigned();
-            $table->integer('validation_status_id')->unsigned();
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

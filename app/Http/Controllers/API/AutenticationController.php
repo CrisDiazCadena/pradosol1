@@ -21,7 +21,7 @@ class AutenticationController extends ApiController
     public function register(RegisterRequest $request)
     {
 
-        //DB::beginTransaction(); // Inicia una transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+        DB::beginTransaction();
 
         try {
             $user = new User();
@@ -45,7 +45,7 @@ class AutenticationController extends ApiController
                 'marital_status' => Partner::SINGLE_STATUS,
             ]);
 
-            //DB::commit(); // Confirma la transacción si todo está bien - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+            DB::commit();
             return $this->successResponse($user, 201, 'Usuario Registrado Satisfactoriamente');
         } catch (QueryException $e) {
             $errorCode = $e->errorInfo[1];
@@ -59,17 +59,19 @@ class AutenticationController extends ApiController
                 } else {
                     $errorMessage = 'Error de duplicación: ' . $e->getMessage();
                 }
-
+                DB::rollBack();
                 return $this->errorResponse(400, $errorMessage);
             }
         } catch (ModelNotFoundException $e) {
             $errorMessage = "Contenido no encontrado";
+            DB::rollBack();
             return $this->errorResponse(404, $errorMessage);
         } catch (\Exception $e) {
             $errorMessage = 'Error al registrar el usuario' . $e->getMessage();
+            DB::rollBack();
             return $this->errorResponse(400, $errorMessage);
-            //DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
         } catch (ValidationException $e) {
+            DB::rollBack();
             $errors = $e->validator->errors()->toArray();
             $emailErrorMessage = isset($errors['email']) ? $errors['email'][1] : 'El correo electrónico ya se ha registrado';
             return $this->errorResponse(404, $emailErrorMessage);
