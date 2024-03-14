@@ -35,7 +35,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('type_identification_id')->references('id')->on('type_identification_users')->onDelete('cascade');
-            $table->foreign('validation_status_id')->references('id')->on('validation_status_users')->onDelete('cascade')->default(2);
+            $table->foreign('validation_status_id')->references('id')->on('validation_status_users')->onDelete('cascade')->default(3);
 
         });
     }

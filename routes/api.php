@@ -48,9 +48,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('user/request/{id}', [UserRequestController::class, 'updateUserRequest'])->name('api.v1.user.request.put.data');
 
     Route::get('administrator', [AdminController::class, 'getAdmin'])->name('api.v1.admin.get.all.data');
-    Route::get('administrator/user', [AdminController::class, 'getUsers'])->name('api.v1.admin.get.user.data');
     Route::post('administrator', [AdminController::class, 'createAdmin'])->name('api.v1.admin..create.data');
     Route::put('administrator/{id}', [AdminController::class, 'updateAdmin'])->name('api.v1.admin.put.data');
+
+    Route::put('administrator/partners/{id}', [AdminController::class, 'updatePartner'])->name('api.v1.partner.put.data');
+    Route::post('administrator/partners', [AdminController::class, 'createPartner'])->name('api.v1.partner.create.data');
+
+    Route::get('administrator/employees', [AdminController::class, 'getEmployee'])->name('api.v1.employee.get.all.data');
+    Route::post('administrator/employees', [AdminController::class, 'createEmployee'])->name('api.v1.employee.post.data');
+    Route::put('administrator/employees/{id}', [AdminController::class, 'updateEmployee'])->name('api.v1.employee.put.data');
+
+
+    Route::get('administrator/user/all', [AdminController::class, 'getUsers'])->name('api.v1.admin.get.user.data');
+    Route::get('administrator/user', [AdminController::class, 'getAllUser'])->name('api.v1.admin.get.all.user.data');
 
     Route::get('employees/{id}', [EmployeeController::class, 'showMyOwnData'])->name('api.v1.employee.show.own.data');
     Route::get('employees/{id}', [EmployeeController::class, 'showMyOwnData'])->name('api.v1.employee.show.own.data');

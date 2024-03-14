@@ -30,7 +30,7 @@ class User extends Authenticatable
      */
 
     protected $attributes = [
-        'validation_status_id' => 2, // Establece el valor predeterminado aquí
+        'validation_status_id' => 3, // Establece el valor predeterminado aquí
     ];
 
     protected $fillable = [

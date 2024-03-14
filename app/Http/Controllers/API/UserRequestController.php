@@ -68,22 +68,20 @@ class UserRequestController extends ApiController
                         $query->where($searchColumn, 'like', "%$userSearchTerm%");
                     });
                 }
-                if ($request->has('filter_1') && !$request->has('filter_2')) {
-                    $filter1Term = $request->input('filter_1');
-                    $query->where("user_requests.status", 'like', "%$filter1Term%");
-                }
 
-                if ($request->has('filter_2') && !$request->has('filter_1')) {
-                    $filter2Term = $request->input('filter_2');
-                    $query->where("user_requests.type", 'like', "%$filter2Term%");
-                }
+                $columns = collect($request->only(['column_filter_0', 'column_filter_1']))->values();
+                $filters = collect($request->only(['filter_0', 'filter_1']))->values();
 
-                if ($request->has('filter_1') && $request->has('filter_2')) {
-                    $filter1Term = $request->input('filter_1');
-                    $filter2Term = $request->input('filter_2');
-                    $query->where("user_requests.status", 'like', "%$filter1Term%")
-                        ->where("user_requests.type", 'like', "%$filter2Term%");
-                }
+                // Aplicar los filtros a la consulta
+                $query->where(function ($query) use ($columns, $filters) {
+                    $count = min($columns->count(), $filters->count());
+                    for ($i = 0; $i < $count; $i++) {
+                        $column = $columns[$i];
+                        $filter = $filters[$i];
+                            $query->where("user_requests." . $column, $filter);
+                    }
+                });
+
                 $requestData = $query->paginate($request->pages);
                 return $this->successResponse($requestData, 200, 'Datos de solicitudes extraidos correctamente');
             }
@@ -130,22 +128,18 @@ class UserRequestController extends ApiController
                     $query->where($searchColumn, 'like', "%$searchTerm%");
                 }
 
-                if ($request->has('filter_1') && !$request->has('filter_2')) {
-                    $filter1Term = $request->input('filter_1');
-                    $query->where("user_requests.status", 'like', "%$filter1Term%");
-                }
+                $columns = collect($request->only(['column_filter_0', 'column_filter_1']))->values();
+                $filters = collect($request->only(['filter_0', 'filter_1']))->values();
 
-                if ($request->has('filter_2') && !$request->has('filter_1')) {
-                    $filter2Term = $request->input('filter_2');
-                    $query->where("user_requests.type", 'like', "%$filter2Term%");
-                }
-
-                if ($request->has('filter_1') && $request->has('filter_2')) {
-                    $filter1Term = $request->input('filter_1');
-                    $filter2Term = $request->input('filter_2');
-                    $query->where("user_requests.status", 'like', "%$filter1Term%")
-                        ->where("user_requests.type", 'like', "%$filter2Term%");
-                }
+                // Aplicar los filtros a la consulta
+                $query->where(function ($query) use ($columns, $filters) {
+                    $count = min($columns->count(), $filters->count());
+                    for ($i = 0; $i < $count; $i++) {
+                        $column = $columns[$i];
+                        $filter = $filters[$i];
+                            $query->where("user_requests." . $column, '=', $filter);
+                    }
+                });
 
                 $requestData = $query->paginate($request->pages);
                 return $this->successResponse($requestData, 200, 'Datos de solicitudes extraidos correctamente');

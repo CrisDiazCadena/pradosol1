@@ -72,7 +72,7 @@ class PartnerController extends ApiController
                 return $this->errorResponse(422, $errorMessage);
             }
             $user = User::findOrFail($request->user_id);
-            $user->validation_status_id = 2;
+            $user->validation_status_id = 3;
             $user->save();
             $partner->save();
             DB::commit();

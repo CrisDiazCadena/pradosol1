@@ -62,12 +62,24 @@ class UserController extends ApiController
                 $query->where($searchColumn, 'like', "%$searchTerm%");
             }
 
-            if ($request->has('filter_1')) {
-                $filter1Term = $request->input('filter_1');
-                $query->whereHas('partner', function ($query) use ($filter1Term) {
-                    $query->where("partners.bonding", 'like', "%$filter1Term%");
-                });
-            }
+            $columns = collect($request->only(['column_filter_0', 'column_filter_1', 'column_filter_2','column_filter_3', 'column_filter_4']))->values();
+            $filters = collect($request->only(['filter_0', 'filter_1', 'filter_2','filter_3', 'filter_4']))->values();
+
+            // Aplicar los filtros a la consulta
+            $query->where(function ($query) use ($columns, $filters) {
+                $count = min($columns->count(), $filters->count());
+                for ($i = 0; $i < $count; $i++) {
+                    $column = $columns[$i];
+                    $filter = $filters[$i];
+                    if ($column === 'bonding' || $column === 'marital_status') {
+                        $query->whereHas('partner', function ($query) use ($column, $filter) {
+                            $query->where($column , '=', $filter);
+                        });
+                    } else {
+                        $query->where("users." . $column, '=',  $filter);
+                    }
+                }
+            });
 
 
             $partnersUsers = $query->paginate(10);
