@@ -40,7 +40,7 @@ class UserController extends ApiController
                 return $this->errorResponse(401, 'Usuario no autenticado');
             }
 
-            if ($request->has('order_by') && $request->has('order_by_column')) {
+            if ($request->has('order_by') && $request->input('order_by') && $request->has('order_by_column')) {
                 $orderBy = $request->input('order_by');
                 $orderByColumn = $request->input('order_by_column');
                 $query->orderBy($orderByColumn, $orderBy);
@@ -101,7 +101,7 @@ class UserController extends ApiController
 
             // Verificar si el usuario está autenticado
             if ($user && ($user->employee || $user->administrator)) {
-                if ($request->has('order_by') && $request->has('order_by_column')) {
+                if ($request->has('order_by') && $request->input('order_by') && $request->has('order_by_column')) {
                     $orderBy = $request->input('order_by');
                     $orderByColumn = $request->input('order_by_column');
                     $query->orderBy($orderByColumn, $orderBy);
@@ -112,7 +112,12 @@ class UserController extends ApiController
                         $query->where('name', 'like', "%$searchTerm%")
                             ->orWhere('lastname', 'like', "%$searchTerm%")
                             ->orWhere('identification_card', 'like', "%$searchTerm%")
-                            ->orWhere('type_beneficiary', 'like', "%$searchTerm%");
+                            ->orWhere('type_beneficiary', 'like', "%$searchTerm%")
+                            ->orWhereHas('partner.user', function ($query) use ($searchTerm) {
+                                $query->where('name', 'like', "%$searchTerm%")
+                                    ->orWhere('lastname', 'like', "%$searchTerm%")
+                                    ->orWhere('identification_card', 'like', "%$searchTerm%");
+                            });
                     });
                 }
                 if ($request->has('search') && $request->has('search_column')) {
@@ -120,6 +125,39 @@ class UserController extends ApiController
                     $searchColumn = $request->input('search_column');
                     $query->where($searchColumn, 'like', "%$searchTerm%");
                 }
+
+                if ($request->has('user_search') && $request->has('search_column')) {
+                    $userSearchTerm = $request->input('user_search');
+                    $searchColumn = $request->input('search_column');
+                    $query->whereHas('partner.user', function ($query) use ($userSearchTerm) {
+                        $query->where('name', 'like', "%$userSearchTerm%")
+                        ->orWhere('lastname', 'like', "%$userSearchTerm%")
+                        ->orWhere('identification_card', 'like', "%$userSearchTerm%");
+                    });
+                }
+
+                $columns = collect($request->only(['column_filter_0', 'column_filter_1','column_filter_2','column_filter_3','column_filter_4']))->values();
+                $filters = collect($request->only(['filter_0', 'filter_1','filter_2','filter_3','filter_4']))->values();
+
+                // Aplicar los filtros a la consulta
+                $query->where(function ($query) use ($columns, $filters) {
+                    $count = min($columns->count(), $filters->count());
+                    for ($i = 0; $i < $count; $i++) {
+                        $column = $columns[$i];
+                        $filter = $filters[$i];
+                        if ($column === 'status' || $column === 'validation_status_id') {
+                            $query->whereHas('partner.user', function ($query) use ($column, $filter) {
+                                $query->where($column, '=', $filter);
+                            });
+                        }elseif ($column === 'marital_status' || $column === 'bonding') {
+                            $query->whereHas('partner', function ($query) use ($filter, $column) {
+                                $query->where( $column, '=',  $filter);
+                            });
+                        }else{
+                            $query->where("beneficiaries." . $column, $filter);
+                        }
+                    }
+                });
 
                 $beneficiaries = $query->paginate(10);
 

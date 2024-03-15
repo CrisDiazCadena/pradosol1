@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminRequest;
 use App\Http\Requests\EmployeeRequest;
 use App\Http\Requests\PartnerRequest;
+use App\Http\Requests\StatusBeneficiaryRequest;
+use App\Http\Requests\StatusLicenseRequest;
 use App\Http\Requests\UpdateAdminPartnerRequest;
 use App\Http\Requests\UpdateEmployeeRequest;
 use App\Http\Requests\UpdateSuperUserRequest;
@@ -14,7 +16,9 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Administrator;
+use App\Models\Beneficiary;
 use App\Models\Employee;
+use App\Models\EmployeeLicense;
 use App\Models\Partner;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -54,7 +58,7 @@ class AdminController extends ApiController
                 return $this->errorResponse(401, 'Usuario no autenticado. No tiene permisos de administrador');
             }
 
-            if ($request->has('order_by') && $request->has('order_by_column')) {
+            if ($request->has('order_by') && $request->input('order_by') && $request->has('order_by_column')) {
                 $orderBy = $request->input('order_by');
                 $orderByColumn = $request->input('order_by_column');
                 $query->orderBy($orderByColumn, $orderBy);
@@ -117,7 +121,7 @@ class AdminController extends ApiController
                 return $this->errorResponse(401, 'Usuario no autenticado. No tiene permisos de administrador');
             }
 
-            if ($request->has('order_by') && $request->has('order_by_column')) {
+            if ($request->has('order_by') && $request->input('order_by') && $request->has('order_by_column')) {
                 $orderBy = $request->input('order_by');
                 $orderByColumn = $request->input('order_by_column');
                 $query->orderBy($orderByColumn, $orderBy);
@@ -280,14 +284,66 @@ class AdminController extends ApiController
         }
     }
 
+    public function statusBeneficiary(StatusBeneficiaryRequest $request, $id)
+    {
+        try {
+            $authenticatedUser = Auth::user();
+            if ($authenticatedUser->id == $request->user_id) {
+                return $this->errorResponse(403, 'No puede actualizar los datos de sus propios beneficiarios. Realice una solicitud para que otro administrador actualice estos datos.');
+            }
+            if (!$authenticatedUser || !$authenticatedUser->administrator) {
+                return $this->errorResponse(403, 'Solo los administradores pueden actualizar los datos de los beneficiarios.');
+            }
+            $user = User::findOrFail($request->user_id);
+            if ($user->status == User::INACTIVE_STATUS) {
+                return $this->errorResponse(403, 'El usuario no esta activo como socio, primero es necesario verificar los datos del socio y aceptar su ingreso al establecimiento.');
+            } elseif ($user->validation_status_id == 2 || $user->validation_status_id == 3) {
+                return $this->errorResponse(403, 'Los datos suministrados del socio no se han validado, primero es necesario verificar los datos del socio y confirmar que sus datos son validos.');
+            } else {
+                DB::beginTransaction();
+                $beneficiary = Beneficiary::findOrFail($id);
+                if ($request->has('verified') && $beneficiary->verified != $request->verified) {
+                    $beneficiary->verified = $request->verified;
+                }
+
+                if (!$beneficiary->isDirty()) {
+                    $errorMessage = "No se ha modificado ningun dato del beneficiario";
+                    DB::rollBack();
+
+                    return $this->errorResponse(422, $errorMessage);
+                }
+
+                $beneficiary->save();
+                DB::commit();
+
+                $successMessage = "Beneficiario actualizado";
+                return $this->successResponse($user, 202, $successMessage);
+            }
+        } catch (AuthenticationException $e) {
+            $message = "Token no válido o no proporcionado";
+            DB::rollBack();
+
+            return $this->errorResponse(401, $message);
+        } catch (ModelNotFoundException $e) {
+            $errorMessage = "Contenido no encontrado";
+            DB::rollBack();
+
+            return $this->errorResponse(404, $errorMessage);
+        } catch (\Exception $e) {
+            $errorMessage = 'Error al actualizar el usuario' . $e->getMessage();
+            DB::rollBack();
+            return $this->errorResponse(400, $errorMessage);
+        }
+    }
+
     public function updateAdmin(UpdateSuperUserRequest $request, $id)
     {
         try {
-            $AuthenticatedUser = Auth::user();
-            if ($AuthenticatedUser->id == $id) {
+            $authenticatedUser = Auth::user();
+            if ($authenticatedUser->id == $id) {
                 return $this->errorResponse(403, 'No puede actualizar sus propios datos. Realice una solicitud para que otro administrador actualice sus datos.');
             }
-            if (!$AuthenticatedUser || !$AuthenticatedUser->administrator) {
+            if (!$authenticatedUser || !$authenticatedUser->administrator) {
                 return $this->errorResponse(403, 'Solo los administradores pueden actualizar los usuarios.');
             }
             DB::beginTransaction();
@@ -366,7 +422,7 @@ class AdminController extends ApiController
                 return $this->errorResponse(401, 'Usuario no autenticado. No tiene permisos de administrador');
             }
 
-            if ($request->has('order_by') && $request->has('order_by_column')) {
+            if ($request->has('order_by') && $request->input('order_by') && $request->has('order_by_column')) {
                 $orderBy = $request->input('order_by');
                 $orderByColumn = $request->input('order_by_column');
                 $query->orderBy($orderByColumn, $orderBy);
@@ -853,6 +909,134 @@ class AdminController extends ApiController
             $errors = $e->validator->errors()->toArray();
             $emailErrorMessage = isset($errors['email']) ? $errors['email'][1] : 'El correo electrónico ya se ha registrado';
             return $this->errorResponse(404, $emailErrorMessage);
+        }
+    }
+
+    public function getLicense(Request $request)
+    {
+        try {
+
+            $user = Auth::user();
+            $query = EmployeeLicense::query()->with('employee.user', "typeLicense");
+
+            // Verificar si el usuario está autenticado
+            if (!$user || !$user->administrator) {
+                return $this->errorResponse(401, 'Usuario no autenticado. No tiene permisos de administrador');
+            }
+
+            if ($request->has('order_by') && $request->input('order_by') && $request->has('order_by_column')) {
+                $orderBy = $request->input('order_by');
+                $orderByColumn = $request->input('order_by_column');
+
+                if ($orderByColumn === 'user') {
+                    // Ordenar por el nombre del usuario
+                    $query->join('employees', 'employee_licenses.employee_id', '=', 'employees.id')
+                        ->join('users', 'employees.user_id', '=', 'users.id')
+                        ->select('employee_licenses.*', 'users.name as user_name', 'users.lastname as user_lastname') // Seleccionar las columnas necesarias de ambas tablas
+                        ->orderBy('users.name', $orderBy);
+                } else {
+                    $query->orderBy($orderByColumn, $orderBy);
+                }
+            }
+            if ($request->has('search') && !$request->has('search_column')) {
+                $searchTerm = $request->input('search');
+                $query->where(function ($query) use ($searchTerm) {
+                    $query->where('description', 'like', "%$searchTerm%")
+                        ->orWhere('comments', 'like', "%$searchTerm%")
+                        ->orWhere('start_license', 'like', "%$searchTerm%")
+                        ->orWhere('end_license', 'like', "%$searchTerm%")
+                        ->orWhereHas('employee.user', function ($query) use ($searchTerm) {
+                            $query->where('name', 'like', "%$searchTerm%")
+                                ->orWhere('lastname', 'like', "%$searchTerm%")
+                                ->orWhere('identification_card', 'like', "%$searchTerm%");
+                        });
+                });
+            }
+
+            if ($request->has('user_search') && $request->has('search_column')) {
+                $userSearchTerm = $request->input('user_search');
+                $searchColumn = $request->input('search_column');
+                $query->whereHas('employee.user', function ($query) use ($userSearchTerm) {
+                    $query->where('name', 'like', "%$userSearchTerm%")
+                        ->orWhere('lastname', 'like', "%$userSearchTerm%")
+                        ->orWhere('identification_card', 'like', "%$userSearchTerm%");
+                });
+            }
+
+            if ($request->has('search') && $request->has('search_column')) {
+                $searchTerm = $request->input('search');
+                $searchColumn = $request->input('search_column');
+                $query->where($searchColumn, 'like', "%$searchTerm%");
+            }
+
+            $columns = collect($request->only(['column_filter_0', 'column_filter_1']))->values();
+            $filters = collect($request->only(['filter_0', 'filter_1']))->values();
+
+            // Aplicar los filtros a la consulta
+            $query->where(function ($query) use ($columns, $filters) {
+                $count = min($columns->count(), $filters->count());
+                for ($i = 0; $i < $count; $i++) {
+                    $column = $columns[$i];
+                    $filter = $filters[$i];
+                    $query->where("employee_licenses." . $column, '=', $filter);
+                }
+            });
+
+            $employeeLicenses = $query->paginate(10);
+
+            return $this->successResponse($employeeLicenses, 200, 'Datos de licencias extraidos correctamente');
+        } catch (\Exception $e) {
+            // Manejo de excepciones
+            return $this->errorResponse(500, 'Error al obtener las licencias: ' . $e->getMessage());
+        }
+    }
+
+    public function statusLicense(StatusLicenseRequest $request, $id)
+    {
+        try {
+            $authenticatedUser = Auth::user();
+            if ($authenticatedUser->id == $request->user_id) {
+                return $this->errorResponse(403, 'No puede actualizar los datos de sus propias licencias. Realice una solicitud para que otro administrador actualice estos datos.');
+            }
+            if (!$authenticatedUser || !$authenticatedUser->administrator) {
+                return $this->errorResponse(403, 'Solo los administradores pueden actualizar los datos de las licencias de los empleados.');
+            }
+            DB::beginTransaction();
+            $license = EmployeeLicense::findOrFail($id);
+            if ($request->has('verified') && $license->verified != $request->verified) {
+                $license->verified = $request->verified;
+            }
+
+            if ($request->has('comments') && $license->comments != $request->comments) {
+                $license->comments = $request->comments;
+            }
+
+            if (!$license->isDirty()) {
+                $errorMessage = "No se ha modificado ningun dato de la licencia solicitada";
+                DB::rollBack();
+
+                return $this->errorResponse(422, $errorMessage);
+            }
+
+            $license->save();
+            DB::commit();
+
+            $successMessage = "Licencia actualizada";
+            return $this->successResponse($license, 202, $successMessage);
+        } catch (AuthenticationException $e) {
+            $message = "Token no válido o no proporcionado";
+            DB::rollBack();
+
+            return $this->errorResponse(401, $message);
+        } catch (ModelNotFoundException $e) {
+            $errorMessage = "Contenido no encontrado";
+            DB::rollBack();
+
+            return $this->errorResponse(404, $errorMessage);
+        } catch (\Exception $e) {
+            $errorMessage = 'Error al actualizar la licencia ' . $e->getMessage();
+            DB::rollBack();
+            return $this->errorResponse(400, $errorMessage);
         }
     }
 }

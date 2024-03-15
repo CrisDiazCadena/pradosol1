@@ -13,11 +13,62 @@ use Illuminate\Support\Facades\Auth;
 
 class EmployeeLicenseContoller extends ApiController
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
+    public function getMyLicenses(Request $request)
+    {
+        try {
+
+            $user = Auth::user();
+            $query = EmployeeLicense::where('employee_id', $user->employee->id)->with('employee.user', "typeLicense");
+
+            // Verificar si el usuario está autenticado
+            if (!$user || !$user->employee) {
+                return $this->errorResponse(401, 'Usuario no autenticado. No tiene permisos para ver las licencias del empleado');
+            }
+
+            if ($request->has('order_by') && $request->input('order_by') && $request->has('order_by_column')) {
+                $orderBy = $request->input('order_by');
+                $orderByColumn = $request->input('order_by_column');
+                $query->orderBy($orderByColumn, $orderBy);
+            }
+            if ($request->has('search') && !$request->has('search_column')) {
+                $searchTerm = $request->input('search');
+                $query->where(function ($query) use ($searchTerm) {
+                    $query->where('description', 'like', "%$searchTerm%")
+                        ->orWhere('comments', 'like', "%$searchTerm%")
+                        ->orWhere('start_license', 'like', "%$searchTerm%")
+                        ->orWhere('end_license', 'like', "%$searchTerm%");
+                });
+            }
+
+            if ($request->has('search') && $request->has('search_column')) {
+                $searchTerm = $request->input('search');
+                $searchColumn = $request->input('search_column');
+                $query->where($searchColumn, 'like', "%$searchTerm%");
+            }
+
+            $columns = collect($request->only(['column_filter_0', 'column_filter_1']))->values();
+            $filters = collect($request->only(['filter_0', 'filter_1']))->values();
+
+            // Aplicar los filtros a la consulta
+            $query->where(function ($query) use ($columns, $filters) {
+                $count = min($columns->count(), $filters->count());
+                for ($i = 0; $i < $count; $i++) {
+                    $column = $columns[$i];
+                    $filter = $filters[$i];
+                    $query->where("employee_licenses." . $column, '=', $filter);
+                }
+            });
+
+            $employeeLicenses = $query->paginate(10);
+
+            return $this->successResponse($employeeLicenses, 200, 'Datos de licencias extraidos correctamente');
+        } catch (\Exception $e) {
+            // Manejo de excepciones
+            return $this->errorResponse(500, 'Error al obtener las licencias: ' . $e->getMessage());
+        }
+    }
+
     public function addLicense(LicenseRequest $request)
     {
         try {
@@ -27,7 +78,7 @@ class EmployeeLicenseContoller extends ApiController
             } else {
 
                 $license = new EmployeeLicense();
-                if($request->has('description')){
+                if ($request->has('description')) {
                     $license->description = $request->description;
                 }
                 $license->support = $request->support;

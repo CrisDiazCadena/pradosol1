@@ -27,7 +27,7 @@ class UserRequestController extends ApiController
                 return $this->errorResponse(403, 'No tienes permiso ver la informacion de solicitudes.');
             } else {
                 $query = UserRequest::with('user.typeIdentification');
-                if ($request->has('order_by') && $request->has('order_by_column')) {
+                if ($request->has('order_by') && $request->input('order_by') && $request->has('order_by_column')) {
                     $orderBy = $request->input('order_by');
                     $orderByColumn = $request->input('order_by_column');
 
@@ -107,7 +107,7 @@ class UserRequestController extends ApiController
 
                 $query = UserRequest::where('user_id', $user->id);
 
-                if ($request->has('order_by') && $request->has('order_by_column')) {
+                if ($request->has('order_by') && $request->input('order_by') && $request->has('order_by_column')) {
                     $orderBy = $request->input('order_by');
                     $orderByColumn = $request->input('order_by_column');
 

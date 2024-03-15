@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
+Route::get('domain/identification',[TypeIdentificationUserController::class, 'index'])->name('api.v1.typeIdentificationUser.index');
 Route::post('register',[AutenticationController::class, 'register'])->name('api.v1.register.create');
 Route::post('login',[AutenticationController::class, 'login'])->name('api.v1.login.create');
 
@@ -58,6 +59,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('administrator/employees', [AdminController::class, 'createEmployee'])->name('api.v1.employee.post.data');
     Route::put('administrator/employees/{id}', [AdminController::class, 'updateEmployee'])->name('api.v1.employee.put.data');
 
+    Route::put('administrator/beneficiary/{id}', [AdminController::class, 'statusBeneficiary'])->name('api.v1.beneficiary.change.status');
+
+    Route::put('administrator/licenses/{id}', [AdminController::class, 'statusLicense'])->name('api.v1.get.licenses.change.status');
+    Route::get('administrator/licenses', [AdminController::class, 'getLicense'])->name('api.v1.get.licenses.data');
 
     Route::get('administrator/user/all', [AdminController::class, 'getUsers'])->name('api.v1.admin.get.user.data');
     Route::get('administrator/user', [AdminController::class, 'getAllUser'])->name('api.v1.admin.get.all.user.data');
@@ -67,8 +72,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('employees/beneficiary/{id}', [EmployeeController::class, 'showBeneficiary'])->name('api.v1.employee.show.partner.beneficiary.data');
     Route::get('employees/tickets/{id}', [EmployeeController::class, 'showTicket'])->name('api.v1.employee.show.partner.ticket.data');
 
-    Route::post('employees/licenses',[EmployeeLicenseContoller::class, 'addLicense'])->name('api.v1.employee.license.create.data');
     Route::get('employees/licenses/type',[LicensesTypeController::class, 'index'])->name('api.v1.licensesType.index');
+    Route::get('employees/my/licenses', [EmployeeLicenseContoller::class, 'getMyLicenses'])->name('api.v1.get.my.licenses.data');
+    Route::post('employees/licenses',[EmployeeLicenseContoller::class, 'addLicense'])->name('api.v1.employee.license.create.data');
 
     Route::post('employees/tickets', [EntranceTicketController::class, 'addTickets'])->name('api.v1.add.ticket.partner.data');
 
@@ -89,15 +95,7 @@ Route::get('admin/users/{id}', [AdminController::class, 'show']);
 Route::put('admin/users/updateinfo/{user}', [AdminController::class, 'update'])->middleware('adminrole');
 Route::delete('admin/users/deleteuser/{user}', [AdminController::class, 'destroy'])->middleware('adminrole');
 */
-
-Route::get('domain/identification',[TypeIdentificationUserController::class, 'index'])->name('api.v1.typeIdentificationUser.index');
 //Route::resource('type_identification_users', [UserController::class, 'index'], ['only' =>['index', 'show']]);
-Route::get('users/{user}', [UserController::class, 'show'])->name('api.v1.users.show');
-Route::post('users/create', [UserController::class, 'create'])->name('api.v1.users.create');
-Route::patch('users/update', [UserController::class, 'update'])->name('api.v1.users.update');
-Route::get('users/{filter}', [UserController::class, 'filter'])->name('api.v1.users.filter');
-Route::get('{users}', [PartnerController::class, 'show'])->name('api.v1.partners.show');
-Route::patch('{users}/update', [PartnerController::class, 'update'])->name('api.v1.partners.update');
 
 /*Route::post('Login', function(){
     $credentials = request()->validate(['email' => ['required', 'email']]);
