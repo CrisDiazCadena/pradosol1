@@ -62,8 +62,8 @@ class UserController extends ApiController
                 $query->where($searchColumn, 'like', "%$searchTerm%");
             }
 
-            $columns = collect($request->only(['column_filter_0', 'column_filter_1', 'column_filter_2','column_filter_3', 'column_filter_4']))->values();
-            $filters = collect($request->only(['filter_0', 'filter_1', 'filter_2','filter_3', 'filter_4']))->values();
+            $columns = collect($request->only(['column_filter_0', 'column_filter_1', 'column_filter_2', 'column_filter_3', 'column_filter_4']))->values();
+            $filters = collect($request->only(['filter_0', 'filter_1', 'filter_2', 'filter_3', 'filter_4']))->values();
 
             // Aplicar los filtros a la consulta
             $query->where(function ($query) use ($columns, $filters) {
@@ -73,7 +73,7 @@ class UserController extends ApiController
                     $filter = $filters[$i];
                     if ($column === 'bonding' || $column === 'marital_status') {
                         $query->whereHas('partner', function ($query) use ($column, $filter) {
-                            $query->where($column , '=', $filter);
+                            $query->where($column, '=', $filter);
                         });
                     } else {
                         $query->where("users." . $column, '=',  $filter);
@@ -131,13 +131,13 @@ class UserController extends ApiController
                     $searchColumn = $request->input('search_column');
                     $query->whereHas('partner.user', function ($query) use ($userSearchTerm) {
                         $query->where('name', 'like', "%$userSearchTerm%")
-                        ->orWhere('lastname', 'like', "%$userSearchTerm%")
-                        ->orWhere('identification_card', 'like', "%$userSearchTerm%");
+                            ->orWhere('lastname', 'like', "%$userSearchTerm%")
+                            ->orWhere('identification_card', 'like', "%$userSearchTerm%");
                     });
                 }
 
-                $columns = collect($request->only(['column_filter_0', 'column_filter_1','column_filter_2','column_filter_3','column_filter_4']))->values();
-                $filters = collect($request->only(['filter_0', 'filter_1','filter_2','filter_3','filter_4']))->values();
+                $columns = collect($request->only(['column_filter_0', 'column_filter_1', 'column_filter_2', 'column_filter_3', 'column_filter_4']))->values();
+                $filters = collect($request->only(['filter_0', 'filter_1', 'filter_2', 'filter_3', 'filter_4']))->values();
 
                 // Aplicar los filtros a la consulta
                 $query->where(function ($query) use ($columns, $filters) {
@@ -149,11 +149,11 @@ class UserController extends ApiController
                             $query->whereHas('partner.user', function ($query) use ($column, $filter) {
                                 $query->where($column, '=', $filter);
                             });
-                        }elseif ($column === 'marital_status' || $column === 'bonding') {
+                        } elseif ($column === 'marital_status' || $column === 'bonding') {
                             $query->whereHas('partner', function ($query) use ($filter, $column) {
-                                $query->where( $column, '=',  $filter);
+                                $query->where($column, '=',  $filter);
                             });
-                        }else{
+                        } else {
                             $query->where("beneficiaries." . $column, $filter);
                         }
                     }

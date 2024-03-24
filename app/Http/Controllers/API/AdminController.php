@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminRequest;
 use App\Http\Requests\EmployeeRequest;
 use App\Http\Requests\PartnerRequest;
+use App\Http\Requests\ProductRequest;
 use App\Http\Requests\StatusBeneficiaryRequest;
 use App\Http\Requests\StatusLicenseRequest;
 use App\Http\Requests\UpdateAdminPartnerRequest;
@@ -20,6 +21,7 @@ use App\Models\Beneficiary;
 use App\Models\Employee;
 use App\Models\EmployeeLicense;
 use App\Models\Partner;
+use App\Models\Products;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
@@ -680,6 +682,115 @@ class AdminController extends ApiController
             return $this->errorResponse(404, $errorMessage);
         } catch (\Exception $e) {
             $errorMessage = 'Error al actualizar el empleado' . $e->getMessage();
+            DB::rollBack();
+            return $this->errorResponse(400, $errorMessage);
+        }
+    }
+
+    public function updateProduct(ProductRequest $request, $id)
+    {
+
+        try {
+            $authenticatedUser = Auth::user();
+            if(!$authenticatedUser->administrator){
+                return $this->errorResponse(403, 'No tienes permiso para Actualizar el producto.');
+            }
+            DB::beginTransaction();
+            $product = Products::FindOrFail($id);
+
+            if ($request->has('stock') && $product->stock != $request->stock) {
+                $product->stock = $request->stock;
+            }
+
+            if ($request->has('name') && $product->name != $request->name) {
+                $product->name = $request->name;
+            }
+
+            if ($request->has('type') && $product->type != $request->type) {
+                $product->type = $request->type;
+            }
+
+            if ($request->has('image') && $product->image != $request->image) {
+                $product->image = $request->image;
+            }
+
+            if ($request->has('status') && $product->status != $request->status) {
+                $product->status = $request->status;
+            }
+            if ($request->has('description') && $product->description != $request->description) {
+                $product->description = $request->description;
+            }
+            if ($request->has('discount_price') && $product->discount_price != $request->discount_price) {
+                $product->discount_price = $request->discount_price;
+            }
+
+            if (!$product->isDirty()) {
+                $errorMessage = "No se ha modificado ningun campo del producto";
+                DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+                return $this->errorResponse(422, $errorMessage);
+            }
+
+            $product->save();
+            DB::commit();
+            $message = "Los datos del producto se han actualizado correctamente";
+            return $this->successResponse($product, 200, $message);
+        } catch (AuthenticationException $e) {
+            $message = "Token no válido o no proporcionado";
+            DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+
+            return $this->errorResponse(401, $message);
+        } catch (ModelNotFoundException $e) {
+            $errorMessage = "Contenido no encontrado";
+            DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+
+            return $this->errorResponse(404, $errorMessage);
+        } catch (\Exception $e) {
+            $errorMessage = 'Error al obtener el producto' . $e->getMessage();
+            return $this->errorResponse(400, $errorMessage);
+            DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+
+        }
+    }
+
+    public function createProduct(ProductRequest $request){
+        try{
+            $user = Auth::user();
+            if(!$user  || !$user->administrator){
+                return $this->errorResponse(403, 'Solo los administradores pueden agregar un producto o servicio.');
+            }
+            else{
+                DB::beginTransaction();
+                $product = new Products();
+                $product->image = $request->image;
+                $product->name = $request->name;
+                $product->type = $request->type;
+                $product->price = $request->price;
+                $product->stock = $request->stock;
+                $product->status = $request->status;
+                $product->description = $request->description;
+
+                if($request->has('discount_price')){
+                    $product->discount_price = $request->discount_price;
+                }else{
+                    $product->discount_price = null;
+                }
+
+                $product->save();
+                DB::commit();
+                return $this->successResponse($product, 201, 'El producto se ha añadido satisfactoriamente');
+            }
+        }catch (AuthenticationException $e) {
+            $message = "Token no válido o no proporcionado";
+            DB::rollBack();
+
+            return $this->errorResponse(401, $message);
+        } catch (ModelNotFoundException $e) {
+            $errorMessage = "Contenido no encontrado";
+            DB::rollBack();
+
+            return $this->errorResponse(404, $errorMessage);
+        } catch (\Exception $e) {
+            $errorMessage = 'Error al crear el producto/servicio ' . $e->getMessage();
             DB::rollBack();
             return $this->errorResponse(400, $errorMessage);
         }

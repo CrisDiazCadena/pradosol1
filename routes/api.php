@@ -13,6 +13,7 @@ use App\Http\Controllers\API\LicensesTypeController;
 use App\Http\Controllers\API\PartnerController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\Api\LoginController;
+use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\TypeIdentificationUserController;
 use App\Http\Controllers\API\UserRequestController;
 
@@ -33,6 +34,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::get('domain/identification',[TypeIdentificationUserController::class, 'index'])->name('api.v1.typeIdentificationUser.index');
+Route::get('products/',[ProductController::class, 'getProducts'])->name('api.v1.get.products');
+Route::get('products/{id}',[ProductController::class, 'getMyProduct'])->name('api.v1.get.one.product');
 Route::post('register',[AutenticationController::class, 'register'])->name('api.v1.register.create');
 Route::post('login',[AutenticationController::class, 'login'])->name('api.v1.login.create');
 
@@ -59,6 +62,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('administrator/employees', [AdminController::class, 'createEmployee'])->name('api.v1.employee.post.data');
     Route::put('administrator/employees/{id}', [AdminController::class, 'updateEmployee'])->name('api.v1.employee.put.data');
 
+    Route::put('administrator/products/{id}', [AdminController::class, 'updateProduct'])->name('api.v1.admin.products.put.data');
+    Route::post('administrator/products', [AdminController::class, 'createProduct'])->name('api.v1.admin.products.create.data');
+
     Route::put('administrator/beneficiary/{id}', [AdminController::class, 'statusBeneficiary'])->name('api.v1.beneficiary.change.status');
 
     Route::put('administrator/licenses/{id}', [AdminController::class, 'statusLicense'])->name('api.v1.get.licenses.change.status');
@@ -71,6 +77,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('employees/{id}', [EmployeeController::class, 'showMyOwnData'])->name('api.v1.employee.show.own.data');
     Route::get('employees/beneficiary/{id}', [EmployeeController::class, 'showBeneficiary'])->name('api.v1.employee.show.partner.beneficiary.data');
     Route::get('employees/tickets/{id}', [EmployeeController::class, 'showTicket'])->name('api.v1.employee.show.partner.ticket.data');
+    Route::put('employees/products/{id}', [EmployeeController::class, 'updateStock'])->name('api.v1.employee.put.stock.products.data');
 
     Route::get('employees/licenses/type',[LicensesTypeController::class, 'index'])->name('api.v1.licensesType.index');
     Route::get('employees/my/licenses', [EmployeeLicenseContoller::class, 'getMyLicenses'])->name('api.v1.get.my.licenses.data');

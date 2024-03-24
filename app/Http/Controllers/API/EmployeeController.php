@@ -4,13 +4,16 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateStockRequest;
 use App\Models\Beneficiary;
 use App\Models\EmployeeLicense;
 use App\Models\entranceTicket;
+use App\Models\Products;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends ApiController
 {
@@ -95,6 +98,53 @@ class EmployeeController extends ApiController
             $errorMessage = 'Error al registrar el beneficiario' . $e->getMessage();
             return $this->errorResponse(400, $errorMessage);
             //DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+        }
+    }
+
+    public function updateStock(UpdateStockRequest $request, $id)
+    {
+
+        try {
+            $authenticatedUser = Auth::user();
+            if(!$authenticatedUser->employee){
+                return $this->errorResponse(403, 'No tienes permiso para Actualizar el estado del producto.');
+            }
+            DB::beginTransaction();
+            $product = Products::FindOrFail($id);
+
+            if ($request->has('stock') && $product->stock != $request->stock) {
+                $product->stock = $request->stock;
+            }
+
+            if ($request->has('status') && $product->status != $request->status) {
+                $product->status = $request->status;
+            }
+
+            if (!$product->isDirty()) {
+                $errorMessage = "No se ha modificado el estado del producto actual";
+                DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+                return $this->errorResponse(422, $errorMessage);
+            }
+
+            $product->save();
+            DB::commit();
+            $message = "Los datos del producto se han actualizado correctamente";
+            return $this->successResponse($product, 200, $message);
+        } catch (AuthenticationException $e) {
+            $message = "Token no válido o no proporcionado";
+            DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+
+            return $this->errorResponse(401, $message);
+        } catch (ModelNotFoundException $e) {
+            $errorMessage = "Contenido no encontrado";
+            DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+
+            return $this->errorResponse(404, $errorMessage);
+        } catch (\Exception $e) {
+            $errorMessage = 'Error al obtener el producto' . $e->getMessage();
+            return $this->errorResponse(400, $errorMessage);
+            DB::rollBack(); // Deshace la transacción - DESCOMENTAR CUANDO COMIENCEN PRUEBAS
+
         }
     }
 
